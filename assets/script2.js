@@ -9,32 +9,25 @@ const domObjects = {
   loader: document.querySelector('.loader')
 }
 
-// Avvio il fetch delle 10 email al caricamento della pagina
-fetchMails();
-
 // Attribuzione della funzione al click del bottone
 domObjects.fetchEmailsButton.addEventListener('click', fetchMails);
 
-function generateMail(returnMail) {
-  axios.get(endpoint)
-    .then(response => {
-      returnMail(response.data.response);
-    })
-    .catch(error => {
-      console.log(error);
-    })
-}
+// Avvio il Fetch delle 10 email al caricamento della pagina
+fetchMails();
 
+// Logica generale avviata al caricamento della pagina
 function fetchMails() {
-  toggleLoader(true);
-  // Pulisco la lista prima di generare nuove email
-  domObjects.emailList.innerHTML = '';
+
+  // Dichiaro l'array vuoto delle mail
   const emailArray = [];
 
-  // Avvia il ciclo di funzioni per generare le email
-  fetchNextEmail();
+  // Mostro il Loader
+  toggleLoader(true);
 
-  //Funzione che renderizza le mail in pagina
+  // Pulisco la lista prima di generare nuove email
+  domObjects.emailList.innerHTML = '';
+
+  // Creo una funzione che stampa le mail in pagina quando l'array è completo
   function fetchingDone() {
     emailArray.forEach(email => {
       const emailItem = document.createElement('li');
@@ -42,14 +35,24 @@ function fetchMails() {
       emailItem.textContent = email;
       domObjects.emailList.appendChild(emailItem);
     });
+
+    //Nascondo il loader
     toggleLoader(false);
   }
 
-  //Funzione che genera la mail successiva e la aggiunge all'array, controllando se sono state generate abbastanza mail alla fine di ogni inserimento
-  function fetchNextEmail() {
-    generateMail(email => {
-      emailArray.push(email);
-      emailArray.length === 10 ? fetchingDone() : fetchNextEmail();
-    });
+  // Creo una funzione che attinge alla API per generare l'array di mail
+  function generateMail() {
+    axios.get(endpoint)
+      .then(response => {
+        emailArray.push(response.data.response);
+        emailArray.length === 10 ? fetchingDone() : generateMail();
+      })
+      .catch(error => {
+        console.log(error);
+      })
   }
+
+  // Avvio la generazione di mail
+  generateMail()
 }
+
